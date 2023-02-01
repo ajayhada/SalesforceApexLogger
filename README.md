@@ -12,19 +12,22 @@ key highlights;
 
 
 Flags: 
-1. isDebugEnabled = default is true but you can read this value from custom settings. 
-1. trackLineNumbers = default is false but you can read this value from custom settings. 
-1. debugforUsers = defauld is null, but you can read tis value from custom settings. 
+1. isDebugEnabled = default is true but you can read this value from custom settings or custom metadata type. 
+1. trackLineNumbers = default is false but you can read this value from custom settings or custom metadata type. 
+1. debugforUsers = defauld is null, but you can read this value from custom settings or custom metadata type. 
+1. currentOrgLoggingLevel = default is 4(debug), but you can read this value from custom settings or custom metadata type.
 
 Usages: 
 
 ```
+// for logging
+Logger.error('you can pass any primitive or complex value or object as argument');
+Logger.error('must be string parameter ', exception);
+Logger.warn('you can pass any primitive or complex value or object as argument');
+Logger.info('you can pass any primitive or complex value or object as argument');
+Logger.debug('you can pass any primitive or complex value or object as argument');
 
-Logger.error('Error Log');
-Logger.error('Error Log');
-Logger.warn('warning log');
-Logger.info('info log');
-Logger.debug('warning log');
+//for saving log using db insert ,platform events, or api call
 Logger.saveLog(SendTo.LOG_TABLE_WITH_FUTURE); || Logger.saveLog(SendTo.LOG_TABLE_WITHOUT_FUTURE);
 Logger.saveLog(SendTo.PLATFORM_EVENT); || Logger.saveLog(SendTo.REST_CALL);
 

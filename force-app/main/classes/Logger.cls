@@ -7,24 +7,25 @@ public without sharing class Logger {
     private static Integer order = 0;
 	private static Integer charLimit = 0;
     private static Boolean isDebugEnabled = true;
+	private static String debugforUsers = UserInfo.getUserId()!=null : UserInfo.getUserId() : '';
     private static Boolean trackLineNumbers = false; // set true to enable debug line number tracking. 
     private static String restAuthToken = '';
     private static String restEndpoint = '';
-
+	private static Integer currentOrgLoggingLevel = 4;
     /*
-    NONE	No logging.
-    ERROR	Error and exception logging.
-    WARN	Warning logging.
-    INFO	Informational logging.
-    DEBUG	User-specified debug logging.
+    NONE -0	No logging.
+    ERROR-1	Error and exception logging.
+    WARN -2	Warning logging.
+    INFO -3	Informational logging.
+    DEBUG-4	User-specified debug logging.
     */
-    private static Integer currentOrgLoggingLevel = 4;
-
+    
     private static void logExecutionContext(){
         String debugLine = '';
-        if(currentOrgLoggingLevel>=1){
+        if(currentOrgLoggingLevel>=1 && debugforUsers.contains(UserInfo.getUserId())){
+
 			logList.add('Execution Started');
-            if (ApexPages.currentPage() != null) {
+			if (ApexPages.currentPage() != null) {
 				logList.add('Request URL ' + ApexPages.currentPage().getUrl());
 				logList.add('Request header ' + JSON.serialize(ApexPages.currentPage().getHeaders()));
 				logList.add('Request params ' + JSON.serialize(ApexPages.currentPage().getParameters()));
@@ -43,11 +44,12 @@ public without sharing class Logger {
 				logList.add('Is Batch=' + System.isBatch());
 			}
 		}	 
-    }
+	}
 
     public static String getConsumedLimits(){
+
     	String consumedLimits = '';
-    	if(currentOrgLoggingLevel>0){
+    	if(currentOrgLoggingLevel>0 && debugforUsers.contains(UserInfo.getUserId())){
             List<String> limitList = new List<String>();
             limitList.add('Consumed DML rows- '+Limits.getDMLRows()+' out of ' + Limits.getLimitDMLRows());
             limitList.add('Consumed DML statements- '+Limits.getDMLStatements()+' out of '+ Limits.getLimitDMLStatements());
@@ -73,7 +75,7 @@ public without sharing class Logger {
     }
 
     public static void info(Object message) {
-		if(currentOrgLoggingLevel>=3){
+		if(currentOrgLoggingLevel>=3 && debugforUsers.contains(UserInfo.getUserId())){
 			try {
 				if(message!=null && message instanceof Exception) {
 					Exception ex = (Exception)message;
@@ -95,11 +97,11 @@ public without sharing class Logger {
 				String debugLine = l.split('column 1')[1].substringBetween('Class.', ',');
 				log(LoggingLevel.INFO, debugLine +'||'+  e.getMessage());
 			}
-		}	    	
+		}
     }
 
     public static void debug(Object message) {
-		if(currentOrgLoggingLevel>=4){
+		if(currentOrgLoggingLevel>=4 && debugforUsers.contains(UserInfo.getUserId())){
 			try {
 				if(message!=null && message instanceof Exception) {
 					Exception ex = (Exception)message;
@@ -121,11 +123,11 @@ public without sharing class Logger {
 				String debugLine = l.split('column 1')[1].substringBetween('Class.', ',');
 				log(LoggingLevel.DEBUG, debugLine +'||'+  e.getMessage());
 			}
-		}	    	
+		}
     }
 
     public static void warn(Object message) {
-		if(currentOrgLoggingLevel>=2){
+		if(currentOrgLoggingLevel>=2 && debugforUsers.contains(UserInfo.getUserId())){
 			try {
 				if(message!=null && message instanceof Exception) {
 					Exception ex = (Exception)message;
@@ -147,11 +149,11 @@ public without sharing class Logger {
 				String debugLine = l.split('column 1')[1].substringBetween('Class.', ',');
 				log(LoggingLevel.WARN, debugLine +'||'+  e.getMessage());
 			}
-		}	    	
+		}
     }
 
     public static void error(Object message) {
-		if(currentOrgLoggingLevel>=1){
+		if(currentOrgLoggingLevel>=1 && debugforUsers.contains(UserInfo.getUserId())){
 			try {
 				if(message!=null && message instanceof Exception) {
 					Exception ex = (Exception)message;
@@ -173,11 +175,11 @@ public without sharing class Logger {
 				String debugLine = l.split('column 1')[1].substringBetween('Class.', ',');
 				log(LoggingLevel.ERROR, debugLine +'||'+  e.getMessage());
 			}
-		}	    	
+		}
     }
 
     public static void error(String message, Exception ex) {
-		if(currentOrgLoggingLevel>=1){
+		if(currentOrgLoggingLevel>=1 && debugforUsers.contains(UserInfo.getUserId())){
 			log(LoggingLevel.ERROR, (message!=null)? message : 'null');
 			if(ex!=null) {
 				log(LoggingLevel.ERROR, ex.getMessage());
@@ -215,10 +217,11 @@ public without sharing class Logger {
     }
 
     public static void saveLogs(SendTo destination) {
-    	if (logList != null && logList.size() > 0 && currentOrgLoggingLevel>0) {
+    	if (logList != null && logList.size() > 0 && currentOrgLoggingLevel>0 && 
+				debugforUsers.contains(UserInfo.getUserId())) {
+			
 			logList.add(getConsumedLimits());
     		try {
-
                 switch on destination {
                     when LOG_TABLE_WITH_FUTURE {
                         SendToTableByFuture(JSON.serialize(logList));
@@ -250,7 +253,7 @@ public without sharing class Logger {
 			SObjectAccessDecision securityDecision = Security.stripInaccessible(AccessType.CREATABLE, newLogRecord);
 
 		} catch (Exception e) {
-			System.debug('saveDebugLogs Exception -  '  + e.getStackTraceString());
+			System.debug('SendToTable Exception -  '  + e.getStackTraceString());
 		}
     }
 
@@ -261,7 +264,7 @@ public without sharing class Logger {
             SObjectAccessDecision securityDecision = Security.stripInaccessible(AccessType.CREATABLE, newLogRecord);
 			
 		} catch (Exception e) {
-			System.debug('saveDebugLogsByFuture Exception -  '  + e.getStackTraceString());
+			System.debug('SendToTableByFuture Exception -  '  + e.getStackTraceString());
 		}
     }
 
